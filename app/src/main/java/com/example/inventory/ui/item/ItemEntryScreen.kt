@@ -33,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.dimensionResource
@@ -45,6 +46,8 @@ import com.example.inventory.R
 import com.example.inventory.ui.AppViewModelProvider
 import com.example.inventory.ui.navigation.NavigationDestination
 import com.example.inventory.ui.theme.InventoryTheme
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.util.Currency
 import java.util.Locale
 
@@ -61,10 +64,13 @@ fun ItemEntryScreen(
     canNavigateBack: Boolean = true,
     viewModel: ItemEntryViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
+    // 1. remember-функции вызываются внутри тела Composable
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             InventoryTopAppBar(
-                title = stringResource(ItemEntryDestination.titleRes),
+                title = stringResource(id = ItemEntryDestination.titleRes), // добавлено id =
                 canNavigateBack = canNavigateBack,
                 navigateUp = onNavigateUp
             )
@@ -73,7 +79,13 @@ fun ItemEntryScreen(
         ItemEntryBody(
             itemUiState = viewModel.itemUiState,
             onItemValueChange = viewModel::updateUiState,
-            onSaveClick = { },
+            onSaveClick = {
+                coroutineScope.launch {
+                    // 2. Сюда нужно добавить вызов сохранения, например:
+                    viewModel.saveItem()
+                    navigateBack()
+                }
+            },
             modifier = Modifier
                 .padding(
                     start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
@@ -83,7 +95,7 @@ fun ItemEntryScreen(
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth()
         )
-    }
+    } // 3. Не забудьте закрыть функцию }
 }
 
 @Composable
